@@ -5,13 +5,24 @@
     }
     // CommonJS
     else if (typeof module !== 'undefined' && module.exports) {
-        module.exports = name;
+        module.exports = definition();
     }
     // Fall back to a global variable
     else {
         global[name] = definition();
     }
 }(this, 'xmltojsdoc', function () {
+    var jsdomFound = true;
+    try {
+        var jsdom = require("jsdom");
+        var { JSDOM } = jsdom;
+    } catch (e) {
+        if (e.code !== 'MODULE_NOT_FOUND') {
+            throw e;
+        }
+        jsdomFound = false;
+    }
+
     var xmlParser;
     var query = function _query(node, selector) {
         return [].slice.call(node.getElementsByTagName(selector));
@@ -209,6 +220,13 @@
 
                 return xmlDoc;
             };
+        }
+    }
+    // not a browser environment
+    else if (jsdomFound) {
+        xmlParser = function (xmlStr) {
+            const dom = new JSDOM("");
+            return ( new dom.window.DOMParser() ).parseFromString(xmlStr, 'text/xml');
         }
     }
 
